@@ -1,15 +1,8 @@
-<div align=center>
-
-<h3><b>copilot-azure-proxy</b></h3>
-<h4>Azure-OAI Compatible Proxy — for JetBrains GitHub Copilot</h4>
+# **Copilot Azure Proxy** _for JetBrains IDEs_
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-GPL%20v3-green)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
-
-</div>
-
-# **Copilot Azure Proxy** _for JetBrains IDEs_
 
 _**"Use any OpenAI-compatible model with JetBrains GitHub Copilot."**_
 
@@ -39,13 +32,22 @@ or any custom model with full IDE integration.
 
 ### 2. Clone & Setup
 
-```bash
+```shell
 git clone https://github.com/CarmJos/copilot-azure-proxy
 cd copilot-azure-proxy
+```
 
-# Run the init script to create .venv and install dependencies
-init.bat    # Windows
-./init.sh   # macOS / Linux  (run `chmod +x init.sh` first)
+Then run the init script to create .venv and install dependencies,
+
+for Windows:
+```shell
+.init.bat
+```
+
+for macOS / Linux:
+```shell
+chmod +x .init.sh 
+./.init.sh
 ```
 
 > [!CAUTION]  
@@ -79,13 +81,13 @@ models:
 
 **Windows:**
 
-```bash
+```shell
 run.bat
 ```
 
 **macOS / Linux:**
 
-```bash
+```shell
 chmod +x run.sh
 ./run.sh
 ```
@@ -100,15 +102,16 @@ The proxy starts at `http://localhost:4000`.
 4. Under the **Azure** provider section, click **+ Add models**.
 5. Fill in the form for each model:
 
-| Field              | Value                                                                  |
-|--------------------|------------------------------------------------------------------------|
-| **Model ID**       | Exact deployment name from `config.yaml` (e.g. `deepseek-v4-pro`)      |
-| **Deployment URL** | `http://localhost:4000/openai/deployments/{model-id}/chat/completions` |
-| **API key**        | Anything, we don't use it.                                             |
-| **Model name**     | The display name you like.                                             |
-| **Toool**          | **Check** (otherwise "agent" mode is not supported)                    |
-| **Vision**         | **Uncheck** (unless your backend supports image inputs)                |
+| Field              | Value                                                                 |
+|--------------------|-----------------------------------------------------------------------|
+| **Model ID**       | Exact deployment name from `config.yaml` (e.g. `deepseek-v4-pro`)     |
+| **Deployment URL** | `http://{host}:{port}/openai/deployments/{model-id}/chat/completions` |
+| **API key**        | Anything, we don't use it.                                            |
+| **Model name**     | The display name you like.                                            |
+| **Toool**          | **Check** (otherwise "agent" mode is not supported)                   |
+| **Vision**         | **Uncheck** (unless your backend supports image inputs)               |
 
+> [!TIP]
 > **Deployment URL** must contain the same model ID as the **Model ID** field.  
 > Replace `{model-id}` with your actual deployment name, e.g.
 `http://localhost:4000/openai/deployments/deepseek-v4-pro/chat/completions`.
