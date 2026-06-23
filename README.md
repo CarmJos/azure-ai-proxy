@@ -159,3 +159,21 @@ python copilot_azure_proxy.py --config config.yaml --port 4000 --host 0.0.0.0
 | `POST` | `/openai/deployments/{name}/chat/completions` | Chat completions (stream and non-stream) |
 | `GET`  | `/health`                                     | Health check                             |
 | `GET`  | `/logs`                                       | Recent log buffer (last 200 lines)       |
+
+
+## Support and Donation
+
+If you appreciate this plugin, consider supporting me with a donation at 
+[GitHub Sponsors](https://github.com/sponsors/CarmJos) or
+[爱发电](https://www.ifdian.net/a/carmjos/plan) !
+
+**Thank you for supporting open-source projects!**
+
+Many thanks to JetBrains for kindly providing a license for us to work on this and other open-source projects.
+
+[![](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)](https://www.jetbrains.com/?from=https://github.com/CarmJos/)
+
+## Open Source License
+
+This project's source code is licensed under
+the [GNU General Public License, Version 3](https://www.gnu.org/licenses/gpl-3.0.html).
