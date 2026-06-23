@@ -43,12 +43,15 @@ or any custom model with full IDE integration.
 git clone https://github.com/CarmJos/copilot-azure-proxy
 cd copilot-azure-proxy
 
-# Create virtual environment
-python -m venv .venv
-
-# Install dependencies
-.venv\Scripts\pip install -r requirements.txt    # Windows
+# Run the init script to create .venv and install dependencies
+init.bat    # Windows
+./init.sh   # macOS / Linux  (run `chmod +x init.sh` first)
 ```
+
+> [!CAUTION]  
+> If the init script fails, please open it with a text editor and
+> inspect the commands. The script is straightforward — each step is a single shell
+> command you can also run manually.
 
 ### 3. Configure Models
 
@@ -83,8 +86,8 @@ run.bat
 **macOS / Linux:**
 
 ```bash
-source .venv/bin/activate
-python copilot_azure_proxy.py --config config.yaml
+chmod +x run.sh
+./run.sh
 ```
 
 The proxy starts at `http://localhost:4000`.
