@@ -156,16 +156,16 @@ python copilot_azure_proxy.py --config config.yaml --port 4000 --host 0.0.0.0
 
 | Method | Path                                          | Description                              |
 |--------|-----------------------------------------------|------------------------------------------|
+| `GET`  | `/openai/models`                              | Azure model catalog                      |
 | `GET`  | `/openai/deployments`                         | List all configured deployments          |
 | `GET`  | `/openai/deployments/{name}`                  | Single deployment detail                 |
 | `GET`  | `/openai/deployments/{name}/models`           | Model info for a deployment              |
-| `GET`  | `/openai/models`                              | Azure model catalog                      |
+| `GET`  | `/openai/deployments/{name}/chat/_ping`       | Deployment health ping (Azure format)    |
+| `POST` | `/openai/deployments/{name}/chat/completions` | Chat completions (stream and non-stream) |
 | `GET`  | `/v1/models`                                  | OpenAI-compatible model list             |
 | `GET`  | `/v1/models/{name}`                           | Single model detail                      |
-| `POST` | `/openai/deployments/{name}/chat/completions` | Chat completions (stream and non-stream) |
 | `GET`  | `/health`                                     | Health check                             |
 | `GET`  | `/logs`                                       | Recent log buffer (last 200 lines)       |
-
 
 ## Support and Donation
 

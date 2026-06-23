@@ -19,12 +19,17 @@ import os
 import sys
 import time
 import traceback
+import warnings
 from pathlib import Path
 from typing import Any
 
+# ── Suppress Pydantic serializer warnings from litellm ──────────────
+# litellm's ModelResponse sometimes has field count mismatches that trigger
+# PydanticSerializationUnexpectedValue warnings. These are harmless but noisy.
+warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
+
 import yaml
 from aiohttp import web
-from aiohttp.client_exceptions import ClientConnectionResetError
 
 import litellm
 
@@ -422,6 +427,43 @@ async def handle_v1_model_detail(request: web.Request) -> web.Response:
 
 # -- Chat completions --------------------------------------------------
 
+async def handle_deployment_ping(request: web.Request) -> web.Response:
+    """GET /openai/deployments/{name}/chat/_ping — deployment health ping.
+
+    Azure OpenAI uses this lightweight endpoint to check if a deployment is
+    available and responsive before sending chat completion requests.
+    """
+    name = request.match_info.get("name", "")
+    cfg = MODELS.get(name)
+    if not cfg:
+        return web.json_response(
+            to_azure_error(f"Deployment '{name}' not found", code="404"),
+            status=404)
+
+    log("🏓", "_ping  {}  ->  {}", name, cfg.display_model_name())
+    return web.json_response({
+        "status": "Healthy",
+        "deployment": name,
+        "model": cfg.display_model_name(),
+        "version": "2025-01-01",
+
+        # -- Token limit info (for JetBrains to read context window) --
+        "max_tokens": cfg.max_tokens,
+        "max_input_tokens": cfg.max_input_tokens,
+        "max_output_tokens": cfg.max_output_tokens,
+        "max_context_tokens": cfg.max_input_tokens,
+        "max_input_context_tokens": cfg.max_input_tokens,
+        "context_window": cfg.max_input_tokens,
+        "max_model_tokens": cfg.max_input_tokens,
+
+        # -- Capabilities --
+        "supports_vision": cfg.supports_vision,
+        "supports_function_calling": cfg.supports_function_calling,
+        "supports_reasoning": cfg.supports_reasoning,
+        "supports_tool_choice": cfg.supports_tool_choice,
+    })
+
+
 def override_model_field(payload: dict, display_model_name_val: str) -> dict:
     """Override the ``model`` field in a chat completion response dict
     so it matches the Azure model name (base_model if configured, else deployment name)."""
@@ -508,7 +550,7 @@ async def handle_chat(request: web.Request) -> web.StreamResponse:
 async def _non_stream_response(kwargs: dict, display_model_name_val: str) -> web.Response:
     result = await litellm.acompletion(**kwargs)
     if hasattr(result, "model_dump"):
-        payload: dict = result.model_dump()
+        payload: dict = result.model_dump(warnings=False)
     elif hasattr(result, "json"):
         payload = json.loads(result.json())
     else:
@@ -533,14 +575,14 @@ async def _stream_response(request: web.Request, kwargs: dict, display_model_nam
         completion = await litellm.acompletion(stream=True, **kwargs)
         async for chunk in completion:
             if hasattr(chunk, "model_dump"):
-                payload = chunk.model_dump()
+                payload = chunk.model_dump(warnings=False)
             elif hasattr(chunk, "json"):
                 payload = json.loads(chunk.json())
             else:
                 payload = chunk if isinstance(chunk, dict) else {"_raw": str(chunk)}
             override_model_field(payload, display_model_name_val)
             await resp.write(f"data: {json.dumps(payload)}\n\n".encode("utf-8"))
-    except ClientConnectionResetError:
+    except ConnectionResetError:
         interrupted = True
         log("🚫", "stream interrupted — client disconnected")
     except Exception:
@@ -548,7 +590,7 @@ async def _stream_response(request: web.Request, kwargs: dict, display_model_nam
         try:
             err_payload = json.dumps({"error": str(traceback.format_exc())})
             await resp.write(f"data: {err_payload}\n\n".encode("utf-8"))
-        except (ClientConnectionResetError, ConnectionResetError):
+        except ConnectionResetError:
             interrupted = True
             log("🚫", "stream interrupted while writing error")
 
@@ -556,7 +598,7 @@ async def _stream_response(request: web.Request, kwargs: dict, display_model_nam
         try:
             await resp.write(b"data: [DONE]\n\n")
             await resp.write_eof()
-        except (ClientConnectionResetError, ConnectionResetError):
+        except ConnectionResetError:
             log("🚫", "stream interrupted — client disconnected before [DONE]")
     return resp
 
@@ -689,6 +731,8 @@ def main(argv: list[str] | None = None) -> None:
     app.router.add_route("GET", "/openai/deployments/{name}/models/", handle_deployment_models)
 
     # -- Chat completions --
+    app.router.add_route("GET", "/openai/deployments/{name}/chat/_ping", handle_deployment_ping)
+    app.router.add_route("GET", "/openai/deployments/{name}/chat/_ping/", handle_deployment_ping)
     app.router.add_route("*", "/openai/deployments/{name}/chat/completions", handle_chat)
     app.router.add_route("*", "/openai/deployments/{name}/chat/completions/", handle_chat)
 
