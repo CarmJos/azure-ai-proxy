@@ -19,6 +19,7 @@ import os
 import sys
 import time
 import traceback
+import uuid
 import warnings
 from pathlib import Path
 from typing import Any
@@ -478,9 +479,16 @@ def override_model_field(payload: dict[str, Any], display_model_name_val: str) -
 async def handle_chat(request: web.Request) -> web.StreamResponse:
     """Handle /openai/deployments/{name}/chat/completions — the main proxy flow."""
 
+    # ---- debug log ----
+    req_id: str = uuid.uuid4().hex[:12]
+    dbg: DebugRequestLog | None = DebugRequestLog(req_id) if DEBUG else None
+
     # ---- resolve model ----
     deployment: str | None = extract_deployment(request.path)
     if not deployment:
+        if dbg:
+            dbg.log_error(Exception("Unrecognized Azure deployment URL"))
+            dbg.save()
         return web.json_response(
             to_azure_error(
                 "Unrecognized Azure deployment URL. "
@@ -490,6 +498,9 @@ async def handle_chat(request: web.Request) -> web.StreamResponse:
 
     cfg: ProxyConfig | None = MODELS.get(deployment)
     if not cfg:
+        if dbg:
+            dbg.log_error(Exception(f"Unknown deployment: {deployment}"))
+            dbg.save()
         return web.json_response(
             to_azure_error(f"Unknown deployment: {deployment}", code="404"),
             status=404)
@@ -503,9 +514,18 @@ async def handle_chat(request: web.Request) -> web.StreamResponse:
         body: bytes = await request.read()
         data: dict[str, Any] = json.loads(body) if body else {}
     except json.JSONDecodeError as e:
+        if dbg:
+            dbg.log_error(e)
+            dbg.save()
         return web.json_response(
             to_azure_error(f"Invalid JSON: {e}", code="400"),
             status=400)
+
+    # ---- debug: log request details ----
+    if dbg:
+        hdrs: dict[str, Any] = dict(request.headers)  # type: ignore[arg-type]
+        dbg.log_request_info(request.method, request.path_qs, hdrs)
+        dbg.log_request_body(data)
 
     # ---- strip image_url ----
     if "messages" in data:
@@ -522,35 +542,58 @@ async def handle_chat(request: web.Request) -> web.StreamResponse:
         if key in data and data[key] is not None:
             kwargs[key] = data[key]
 
+    # ---- thinking/reasoning mode (DeepSeek etc.) ----
+    if cfg.supports_reasoning:
+        kwargs.setdefault("reasoning_effort", "high")
+        extra_body: dict[str, Any] = dict(kwargs.setdefault("extra_body", {}) or {})
+        extra_body.setdefault("thinking", {"type": "enabled"})
+        kwargs["extra_body"] = extra_body
+
+    # ---- debug: log litellm kwargs ----
+    if dbg:
+        dbg.log_litellm_kwargs(kwargs)
+
     # ---- call ----
     try:
         if data.get("stream"):
-            return await _stream_response(request, kwargs, display_model)
+            return await _stream_response(request, kwargs, display_model, dbg)
         else:
-            return await _non_stream_response(kwargs, display_model)
+            return await _non_stream_response(kwargs, display_model, dbg)
     except litellm.exceptions.AuthenticationError as e:
         log("🔐", "auth error: {}", str(e)[:120])
+        if dbg:
+            dbg.log_error(e)
+            dbg.save()
         return web.json_response(
             to_azure_error(f"Backend auth error: {e}", code="401"),
             status=401)
     except litellm.exceptions.APIError as e:
         log("❌", "API error: {}", str(e)[:200])
+        if dbg:
+            dbg.log_error(e)
+            dbg.save()
         return web.json_response(
             to_azure_error(f"Backend API error: {e}", code="502"),
             status=502)
     except asyncio.TimeoutError:
         log("⏱️", "timeout for {}", deployment)
+        if dbg:
+            dbg.log_error(asyncio.TimeoutError("Request timed out"))
+            dbg.save()
         return web.json_response(
             to_azure_error("Request timed out", code="504"),
             status=504)
     except Exception:
         log("💥", "unexpected error:\n{}", traceback.format_exc())
+        if dbg:
+            dbg.log_error(Exception(traceback.format_exc()))
+            dbg.save()
         return web.json_response(
             to_azure_error("Internal proxy error", code="500"),
             status=500)
 
 
-async def _non_stream_response(kwargs: dict[str, Any], display_model_name_val: str) -> web.Response:
+async def _non_stream_response(kwargs: dict[str, Any], display_model_name_val: str, dbg: DebugRequestLog | None = None) -> web.Response:
     result: Any = await litellm.acompletion(**kwargs)
     payload: dict[str, Any]
     if hasattr(result, "model_dump"):
@@ -560,20 +603,24 @@ async def _non_stream_response(kwargs: dict[str, Any], display_model_name_val: s
     else:
         payload = dict(result)  # type: ignore[arg-type]
     override_model_field(payload, display_model_name_val)
+    # ---- debug: log response ----
+    if dbg:
+        dbg.log_response(200, payload)
+        dbg.save()
     # Add Azure-like response headers
     resp: web.Response = web.json_response(payload)
     resp.headers["x-request-id"] = f"proxy-req-{int(time.time())}"
     return resp
 
 
-async def _stream_response(request: web.Request, kwargs: dict[str, Any], display_model_name_val: str) -> web.StreamResponse:
+async def _stream_response(request: web.Request, kwargs: dict[str, Any], display_model_name_val: str, dbg: DebugRequestLog | None = None) -> web.StreamResponse:
     resp: web.StreamResponse = web.StreamResponse(status=200)
     resp.headers["Content-Type"] = "text/event-stream"
     resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     resp.headers["Connection"] = "keep-alive"
     resp.headers["x-request-id"] = f"proxy-req-{int(time.time())}"
 
-    # ── CDN / reverse-proxy compatibility headers ─────────────────────
+    # ── CDN / reverse-proxy compatibility headers ──���──────────────────
     # X-Accel-Buffering: no   → tell Nginx / Tengine (EdgeOne) not to buffer SSE
     resp.headers["X-Accel-Buffering"] = "no"
     # Keep client connection alive; CDNs often reset idle HTTP/2 streams
@@ -583,6 +630,11 @@ async def _stream_response(request: web.Request, kwargs: dict[str, Any], display
 
     stream_ended: bool = False       # set True when the LLM stream completes normally
     keepalive_interval: int = 15     # seconds — keep CDN connection alive during LLM "thinking"
+
+    # ---- debug: stream tracking ----
+    if dbg:
+        dbg.log_stream_start()
+    chunk_idx: int = 0
 
     # ── keepalive task: sends SSE comment lines when no data flows ────
     async def _keepalive() -> None:
@@ -610,12 +662,22 @@ async def _stream_response(request: web.Request, kwargs: dict[str, Any], display
             else:
                 payload = chunk if isinstance(chunk, dict) else {"_raw": str(chunk)}
             override_model_field(payload, display_model_name_val)
+            # ---- debug: log each chunk ----
+            if dbg:
+                dbg.log_stream_chunk(chunk_idx, payload)
+                chunk_idx += 1
             await resp.write(f"data: {json.dumps(payload)}\n\n".encode("utf-8"))
 
     except ConnectionResetError:
         log("🚫", "stream interrupted — client disconnected")
+        if dbg:
+            dbg.log_stream_end(chunk_idx)
+            dbg.save()
     except Exception:
         log("💥", "stream error:\n{}", traceback.format_exc())
+        if dbg:
+            dbg.log_error(Exception(traceback.format_exc()))
+            dbg.save()
         try:
             err_payload: str = json.dumps({"error": str(traceback.format_exc())})
             await resp.write(f"data: {err_payload}\n\n".encode("utf-8"))
@@ -629,6 +691,10 @@ async def _stream_response(request: web.Request, kwargs: dict[str, Any], display
             await resp.write_eof()
         except ConnectionResetError:
             log("🚫", "stream interrupted — client disconnected before [DONE]")
+        # ---- debug: save stream log ----
+        if dbg:
+            dbg.log_stream_end(chunk_idx)
+            dbg.save()
 
     # ── cleanup: cancel keepalive ────────────────────────────────────
     stream_ended = True
@@ -714,6 +780,115 @@ MODELS: dict[str, ProxyConfig] = {}
 DEFAULT_TIMEOUT: int = 120
 DEBUG: bool = False
 PROXY_API_KEY: str = ""
+REQUESTS_DIR: str = "requests"
+
+
+# ======================================================================
+#  Debug request logging
+# ======================================================================
+
+class DebugRequestLog:
+    """Accumulates detailed request/response info and writes to requests/<id>.log when DEBUG is on."""
+
+    def __init__(self, request_id: str) -> None:
+        self.request_id: str = request_id
+        self.lines: list[str] = []
+        self.start_time: float = time.time()
+        self._created_at: datetime.datetime = datetime.datetime.now()
+        self._section("REQUEST START")
+        self._line(f"Request ID : {request_id}")
+        self._line(f"Timestamp  : {self._created_at.isoformat()}")
+
+    def _line(self, text: str) -> None:
+        self.lines.append(text)
+
+    def _section(self, title: str) -> None:
+        self.lines.append("")
+        self.lines.append(f"{'=' * 72}")
+        self.lines.append(f"  {title}")
+        self.lines.append(f"{'=' * 72}")
+
+    def log_request_info(self, method: str, path: str, headers: dict[str, Any]) -> None:
+        """Log HTTP request metadata."""
+        self._section("HTTP REQUEST")
+        self._line(f"Method     : {method}")
+        self._line(f"Path       : {path}")
+        self._line("Headers    :")
+        for k, v in headers.items():
+            if k.lower() in ("authorization", "api-key", "x-api-key"):
+                v = f"{str(v)[:12]}...***"
+            self._line(f"  {k}: {v}")
+
+    def log_request_body(self, body: dict[str, Any]) -> None:
+        """Log the parsed request body."""
+        self._section("REQUEST BODY")
+        self._line(json.dumps(body, indent=2, ensure_ascii=False))
+
+    def log_litellm_kwargs(self, kwargs: dict[str, Any]) -> None:
+        """Log the kwargs being sent to litellm (masks api_key)."""
+        self._section("LITELLM CALL ARGUMENTS")
+        safe_kwargs: dict[str, Any] = {}
+        for k, v in kwargs.items():
+            if k == "api_key" and v:
+                safe_kwargs[k] = f"{str(v)[:8]}...***"
+            else:
+                safe_kwargs[k] = v
+        self._line(json.dumps(safe_kwargs, indent=2, ensure_ascii=False, default=str))
+
+    def log_response(self, status: int, payload: dict[str, Any] | None = None) -> None:
+        """Log non-stream response."""
+        elapsed: float = time.time() - self.start_time
+        self._section("RESPONSE")
+        self._line(f"Status     : {status}")
+        self._line(f"Elapsed    : {elapsed:.3f}s")
+        if payload is not None:
+            self._line("Body       :")
+            self._line(json.dumps(payload, indent=2, ensure_ascii=False))
+
+    def log_stream_start(self) -> None:
+        """Log stream start."""
+        self._section("STREAM RESPONSE")
+        self._line("Type       : SSE (text/event-stream)")
+        self._line("Chunks     :")
+
+    def log_stream_chunk(self, index: int, chunk: dict[str, Any]) -> None:
+        """Log a single stream chunk."""
+        self._line(f"\n  --- Chunk #{index} ---")
+        self._line(f"  {json.dumps(chunk, ensure_ascii=False)}")
+
+    def log_stream_end(self, total_chunks: int) -> None:
+        """Log stream completion."""
+        elapsed: float = time.time() - self.start_time
+        self._section("STREAM END")
+        self._line(f"Total Chunks : {total_chunks}")
+        self._line(f"Elapsed      : {elapsed:.3f}s")
+
+    def log_error(self, error: Exception) -> None:
+        """Log an error."""
+        elapsed: float = time.time() - self.start_time
+        self._section("ERROR")
+        self._line(f"Type       : {type(error).__name__}")
+        self._line(f"Message    : {str(error)}")
+        self._line(f"Elapsed    : {elapsed:.3f}s")
+        self._line(f"Traceback  :\n{traceback.format_exc()}")
+
+    def save(self) -> None:
+        """Write the log to requests/<YYYY-MM-DD_HH-MM-SS-mmm>_<request_id>.log."""
+        if not DEBUG:
+            return
+        try:
+            req_dir: Path = Path(REQUESTS_DIR)
+            req_dir.mkdir(parents=True, exist_ok=True)
+            ts: str = self._created_at.strftime("%Y-%m-%d_%H-%M-%S-%f")[:-3]
+            log_path: Path = req_dir / f"{ts}_{self.request_id}.log"
+            self._section("END")
+            elapsed: float = time.time() - self.start_time
+            self._line(f"Total elapsed: {elapsed:.3f}s")
+            with open(log_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(self.lines) + "\n")
+            log("📝", "debug log saved: {}", log_path)
+        except Exception:
+            log("💥", "failed to save debug log:\n{}", traceback.format_exc())
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -755,6 +930,9 @@ def main(argv: list[str] | None = None) -> None:
             log("🏷️", "   {}  →  \"{}\"", n, n)
 
     log("🌐", "listen  : http://{}:{}", args.host, port)
+    if DEBUG:
+        log("🐛", "DEBUG mode ON — detailed request logs will be saved to {}/", REQUESTS_DIR)
+        Path(REQUESTS_DIR).mkdir(parents=True, exist_ok=True)
 
     app: web.Application = web.Application(middlewares=[logging_middleware])
 

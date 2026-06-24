@@ -8,7 +8,4 @@ __pycache__/
 
 # Logs
 *.log
-
-# macOS
-.DS_Store
-
+requests/
