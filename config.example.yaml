@@ -1,0 +1,112 @@
+# ─────────────────────────────────────────────────────────────────
+#  azure-ai-proxy  —  configuration
+# ─────────────────────────────────────────────────────────────────
+#  Each model under "models" maps an Azure "deployment name" to a
+#  backend.  You can use raw values or os.environ/KEY to pull from
+#  environment variables.
+# ─────────────────────────────────────────────────────────────────
+
+
+# ── Global settings ─────────────────────────────────────────────
+general:
+  host: "0.0.0.0"           # Bind address
+  port: 4000                 # Listen port
+  timeout: 120               # Global default timeout (seconds)
+  debug: false               # Debug mode — log POST bodies and full request details
+  api-key: ""                # Proxy-level API key (leave empty to accept all)
+
+  # Logging
+  log-level: "INFO"          # DEBUG / INFO / WARNING / ERROR
+  log-file: ""               # Log file path (empty = stdout only)
+
+  # Streaming
+  max-stream-timeout: 300    # Max seconds between stream chunks before timeout
+  keepalive-interval: 15     # Seconds between SSE keepalive comments
+
+
+# ── Model definitions ───────────────────────────────────────────
+#  Each entry defines a deployment that Azure-format clients can call.
+#  The "model" field uses LiteLLM's provider/model format.
+#
+#  Supported providers (examples):
+#    openai/deepseek-v4-pro       → OpenAI-compatible API
+#    azure/gpt-4o                 → Azure OpenAI
+#    anthropic/claude-sonnet-4-20250514  → Anthropic
+#    ollama/llama3                → Local Ollama
+#
+#  See https://docs.litellm.ai/docs/providers for the full list.
+
+models:
+  # ── DeepSeek via OpenAI-compatible API ──────────────────────────
+  - model_name: deepseek-v4-pro
+    litellm_params:
+      model: openai/deepseek-v4-pro
+      api_base: https://api.deepseek.com
+      api_key: os.environ/DEEPSEEK_API_KEY
+      supports_vision: false
+      supports_function_calling: true
+      supports_reasoning: true
+      supports_tool_choice: true
+      max_tokens: 384000
+      max_input_tokens: 1000000
+      max_output_tokens: 384000
+      timeout: 180
+      base_model: deepseek-v4-pro    # Model name reported in Azure responses
+
+  - model_name: deepseek-v4-flash
+    litellm_params:
+      model: openai/deepseek-v4-flash
+      api_base: https://api.deepseek.com
+      api_key: os.environ/DEEPSEEK_API_KEY
+      supports_vision: false
+      supports_function_calling: true
+      supports_reasoning: true
+      supports_tool_choice: true
+      max_tokens: 384000
+      max_input_tokens: 1000000
+      max_output_tokens: 384000
+      timeout: 120
+
+  # ── Azure OpenAI ────────────────────────────────────────────────
+  # - model_name: gpt-4o
+  #   litellm_params:
+  #     model: azure/gpt-4o
+  #     api_base: os.environ/AZURE_API_BASE
+  #     api_key: os.environ/AZURE_API_KEY
+  #     supports_vision: true
+  #     supports_function_calling: true
+  #     max_tokens: 128000
+  #     max_input_tokens: 128000
+  #     max_output_tokens: 16384
+
+  # ── Anthropic ───────────────────────────────────────────────────
+  # - model_name: claude-sonnet
+  #   litellm_params:
+  #     model: anthropic/claude-sonnet-4-20250514
+  #     api_key: os.environ/ANTHROPIC_API_KEY
+  #     supports_vision: true
+  #     supports_function_calling: true
+  #     max_tokens: 200000
+  #     max_input_tokens: 200000
+  #     max_output_tokens: 8192
+
+  # ── OpenAI direct ───────────────────────────────────────────────
+  # - model_name: gpt-4o
+  #   litellm_params:
+  #     model: gpt-4o
+  #     api_key: os.environ/OPENAI_API_KEY
+  #     supports_vision: true
+  #     supports_function_calling: true
+  #     max_tokens: 128000
+  #     max_input_tokens: 128000
+  #     max_output_tokens: 16384
+
+  # ── Local Ollama ────────────────────────────────────────────────
+  # - model_name: llama3
+  #   litellm_params:
+  #     model: ollama/llama3
+  #     api_base: http://localhost:11434
+  #     max_tokens: 8192
+  #     max_input_tokens: 8192
+  #     max_output_tokens: 4096
+

@@ -1,5 +1,8 @@
 .idea/
 
+# Sensitive files
+config.yaml
+
 # Python
 .venv
 __pycache__/
