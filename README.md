@@ -1,8 +1,16 @@
-# **Azure AI Proxy**
+<div align=center>
+
+<img src=".doc/images/banner.png"  alt="Banner"/>
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-GPL%20v3-green)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+
+README LANGUAGES [ [**English**](README.md) | [简体中文](README-zh.md) ]
+</div>
+
+# **Azure AI Proxy**
+<img src=".doc/images/logo.png" width="150px" alt="logo" align="right" style="float: right"/>
 
 _**"A lightweight proxy that bridges Azure OpenAI API format to any LiteLLM-supported backend."**_
 
