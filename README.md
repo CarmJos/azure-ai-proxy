@@ -14,7 +14,6 @@ Compatible with tools and IDEs that support the Azure OpenAI API format, includi
 
 ## Features & Advantages
 
-- **Modular Architecture** — Clean `src/` package structure with separate modules for config, bridge, handlers, and middleware.
 - **Full Azure AI Compatibility** — Supports `/openai/deployments`, `/openai/models`, chat completions, embeddings, and legacy completions.
 - **Multi-Provider via LiteLLM** — Use any LiteLLM-supported provider (`openai/`, `deepseek/`, `anthropic/`, `ollama/`, etc.) with a unified config.
 - **Model Identity Emulation** — Use `base_model` to impersonate known Azure models and fix context-window display issues.
@@ -173,7 +172,7 @@ See [LiteLLM Providers](https://docs.litellm.ai/docs/providers) for the full lis
 ### CLI Arguments
 
 ```
-python -m src.server --config config.yaml --port 4000 --host 0.0.0.0
+python -m proxy.server --config config.yaml --port 4000 --host 0.0.0.0
 ```
 
 | Flag       | Default       | Description              |
@@ -202,7 +201,7 @@ python -m src.server --config config.yaml --port 4000 --host 0.0.0.0
 ## Project Structure
 
 ```
-src/
+proxy/
 ├── server.py           # Application factory and entry point
 ├── config.py           # Configuration loading and management
 ├── bridge.py           # LiteLLM bridge — translates requests and normalizes responses

@@ -13,5 +13,4 @@ if [ ! -f "$CONFIG" ]; then
     exit 1
 fi
 
-python -m src.server --config "$CONFIG"
-
+python -m proxy.server --config "$CONFIG"

@@ -171,4 +171,15 @@ def load_config(path: str | Path) -> AppConfig:
     if not cfg.models:
         raise ValueError("No models defined in config file.")
 
+    # -- Warn about missing token limits --
+    for _name, _mc in cfg.models.items():
+        if _mc.max_input_tokens is None or _mc.max_output_tokens is None:
+            import logging as _log_mod
+            _log_mod.getLogger("azure_ai_proxy.config").warning(
+                "⚠️  Model '%s' is missing max_input_tokens / max_output_tokens in config. "
+                "Defaults (%d / %d) will be used in API responses. "
+                "Set these in config.yaml for accurate context-window reporting in clients.",
+                _name, 128000, 16384,
+            )
+
     return cfg

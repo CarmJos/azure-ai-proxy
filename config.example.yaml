@@ -28,6 +28,15 @@ general:
 #  Each entry defines a deployment that Azure-format clients can call.
 #  The "model" field uses LiteLLM's provider/model format.
 #
+#  IMPORTANT: Set max_input_tokens and max_output_tokens for each model.
+#  These are returned in /openai/models and /openai/deployments responses
+#  so that clients (e.g. JetBrains Copilot) can display the correct
+#  context window size. If omitted, defaults of 128000 / 16384 are used.
+#
+#  TIP: Use "base_model" to impersonate a well-known Azure model name
+#  (e.g. gpt-4o) — clients that recognise the name will automatically
+#  use the correct context window, tool-call support, etc.
+#
 #  Supported providers (examples):
 #    openai/deepseek-v4-pro       → OpenAI-compatible API
 #    azure/gpt-4o                 → Azure OpenAI
@@ -51,7 +60,7 @@ models:
       max_input_tokens: 1000000
       max_output_tokens: 384000
       timeout: 180
-      base_model: deepseek-v4-pro    # Model name reported in Azure responses
+      # base_model: gpt-4o       # Uncomment to impersonate a known Azure model
 
   - model_name: deepseek-v4-flash
     litellm_params:
@@ -109,4 +118,3 @@ models:
   #     max_tokens: 8192
   #     max_input_tokens: 8192
   #     max_output_tokens: 4096
-

@@ -25,7 +25,7 @@ WORKDIR /app
 COPY --from=builder /root/.local /root/.local
 
 # Copy application source code
-COPY src/ ./src/
+COPY proxy/ ./proxy/
 
 # Copy default config (users should mount their own config.yaml)
 COPY config.example.yaml ./config.yaml
@@ -44,7 +44,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:4000/health')" || exit 1
 
 # Default entrypoint
-ENTRYPOINT ["python", "-m", "src.server", "--config", "config.yaml"]
+ENTRYPOINT ["python", "-m", "proxy.server", "--config", "config.yaml"]
 
 # Default command arguments (can be overridden)
 CMD ["--host", "0.0.0.0", "--port", "4000"]

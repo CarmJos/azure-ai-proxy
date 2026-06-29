@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import time
 import traceback
 from typing import Any
@@ -57,35 +56,100 @@ async def auth_middleware(request: web.Request, handler: Any) -> web.StreamRespo
 
 # ── Logging middleware ──────────────────────────────────────────────
 
+# Maximum bytes of request body to log (to avoid flooding output)
+_MAX_BODY_LOG_BYTES = 2048
+
+# Paths that always log full request details (model / deployment discovery only)
+# Chat completions, embeddings, etc. are excluded to avoid flooding.
+_DIAG_PATHS = ("/openai/models", "/openai/deployments", "/v1/models")
+_DIAG_EXCLUDE = ("/chat/completions", "/embeddings", "/completions")
+
+
 @web.middleware
 async def logging_middleware(request: web.Request, handler: Any) -> web.StreamResponse:
-    """Log every request and response."""
+    """Log every request and response.
+
+    • **All** HTTP methods are logged (GET, POST, …).
+    • When ``general.debug`` is ``true``, the POST body is also logged
+      (truncated to ``_MAX_BODY_LOG_BYTES``).
+    • Model / deployment listing endpoints are always logged at INFO
+      level so that Copilot discovery traffic is visible even with
+      ``debug: false``.
+    """
     req_id = request.get("request_id", "-")
     debug = request.app["config"].debug
 
-    # Log request
+    # ── Collect request metadata ────────────────────────────────────
     ct = request.headers.get("Content-Type", request.headers.get("content-type", "-"))
     auth_present = "YES" if ("authorization" in request.headers or "api-key" in request.headers) else "NO"
+    ua = request.headers.get("User-Agent", "-")
+    accept = request.headers.get("Accept", "-")
     api_ver = ""
     if "?" in request.path_qs:
         from .utils import parse_api_version
         api_ver = parse_api_version(request.path_qs.split("?", 1)[1])
 
-    if debug or request.method != "POST":
-        log.info("📡 [%s] REQ  %s %s  [api-ver: %s] [CT: %s] [Auth: %s]",
-                 req_id, request.method, request.path_qs, api_ver or "-", ct, auth_present)
+    _clean_path = request.path.rstrip("/")
+    is_diag_path = (
+        any(_clean_path == p or _clean_path.startswith(p + "/") for p in _DIAG_PATHS)
+        and not any(_clean_path.endswith(ex) for ex in _DIAG_EXCLUDE)
+    )
+
+    # ── Log the request line ────────────────────────────────────────
+    # Always log at least the request line for every incoming request.
+    log.info("📡 [%s] REQ  %s %s  [api-ver: %s] [CT: %s] [UA: %s] [Auth: %s]",
+             req_id, request.method, request.path_qs, api_ver or "-", ct, ua, auth_present)
+
+    # ── Log request body ────────────────────────────────────────────
+    # In debug mode, or for model/deployment discovery POSTs, dump the body.
+    body_logged = False
+    if request.method == "POST" and (debug or is_diag_path):
+        try:
+            raw_body = await request.read()
+            if raw_body:
+                truncated = raw_body[:_MAX_BODY_LOG_BYTES]
+                body_preview = truncated.decode("utf-8", errors="replace")
+                if len(raw_body) > _MAX_BODY_LOG_BYTES:
+                    body_preview += f"… [{len(raw_body)} bytes total]"
+                log.info("📥 [%s] BODY %s", req_id, body_preview)
+                body_logged = True
+            else:
+                log.info("📥 [%s] BODY (empty)", req_id)
+                body_logged = True
+        except Exception:
+            log.warning("📥 [%s] BODY (failed to read)", req_id)
+
+    # ── Log full headers in debug mode ──────────────────────────────
+    if debug:
+        hdrs = {k: v for k, v in request.headers.items()
+                if k.lower() not in ("authorization", "api-key")}
+        log.info("📋 [%s] HEADERS %s", req_id, hdrs)
 
     try:
         resp = await handler(request)
     except web.HTTPException:
         raise
     except Exception:
-        log.error("💥 [%s] Unhandled exception:\n%s", req_id, traceback.format_exc())
-        raise
+        log.error("💥 [%s] Unhandled error: %s", req_id, traceback.format_exc())
+        return web.json_response(
+            to_azure_error("Internal proxy error", "500"),
+            status=500,
+        )
 
     elapsed = time.monotonic() - request.get("start_time", time.monotonic())
     status = resp.status if hasattr(resp, "status") else 0
     log.info("📤 [%s] RES  %s %s  %d  (%.3fs)", req_id, request.method, request.path, status, elapsed)
+
+    # ── Log response body for model / deployment endpoints ──────────
+    # This helps diagnose what Copilot sees when querying context length.
+    if is_diag_path and hasattr(resp, "body") and resp.body:
+        try:
+            resp_preview = resp.body[:_MAX_BODY_LOG_BYTES].decode("utf-8", errors="replace")
+            if len(resp.body) > _MAX_BODY_LOG_BYTES:
+                resp_preview += f"… [{len(resp.body)} bytes total]"
+            log.info("📋 [%s] RESP_BODY %s", req_id, resp_preview)
+        except Exception:
+            pass
 
     return resp
 
@@ -100,7 +164,7 @@ async def error_handling_middleware(request: web.Request, handler: Any) -> web.S
         return await handler(request)
     except web.HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         log.error("💥 [%s] Unhandled error: %s", req_id, traceback.format_exc())
         return web.json_response(
             to_azure_error("Internal proxy error", "500"),
@@ -122,4 +186,3 @@ async def cors_middleware(request: web.Request, handler: Any) -> web.StreamRespo
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, api-key"
     resp.headers["Access-Control-Max-Age"] = "86400"
     return resp
-

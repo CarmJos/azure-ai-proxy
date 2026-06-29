@@ -31,15 +31,26 @@ async def handle_logs(request: web.Request) -> web.Response:
 
 
 async def handle_catch_all(request: web.Request) -> web.Response:
-    """Catch-all handler for any unmatched routes."""
-    log.warning("⚠️ UNMATCHED  %s %s  [UA: %s] [CT: %s] [Accept: %s]",
-                request.method,
-                request.path_qs,
-                request.headers.get("User-Agent", "-"),
-                request.headers.get("Content-Type", "-"),
-                request.headers.get("Accept", "-"))
+    """Catch-all handler for any unmatched routes.
+
+    Logs full details so that unexpected Copilot requests are visible.
+    """
+    from ..utils import parse_api_version
+
+    api_ver = ""
+    if "?" in request.path_qs:
+        api_ver = parse_api_version(request.path_qs.split("?", 1)[1])
+
+    log.warning(
+        "⚠️ UNMATCHED  %s %s  [api-ver: %s] [UA: %s] [CT: %s] [Accept: %s]",
+        request.method,
+        request.path_qs,
+        api_ver or "-",
+        request.headers.get("User-Agent", "-"),
+        request.headers.get("Content-Type", "-"),
+        request.headers.get("Accept", "-"),
+    )
     return web.json_response(
         to_azure_error(f"Not found: {request.method} {request.path}", "404"),
         status=404,
     )
-

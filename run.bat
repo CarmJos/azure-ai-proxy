@@ -37,7 +37,7 @@ echo  Press Ctrl+C to stop.
 echo ============================================
 echo.
 
-"%VENV_PYTHON%" -m src.server --config config.yaml
+"%VENV_PYTHON%" -m proxy.server --config config.yaml
 
 pause
 
