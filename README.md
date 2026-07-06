@@ -80,37 +80,11 @@ docker run -p 4000:4000 -v /path/to/config.yaml:/app/config.yaml ghcr.io/carmjos
 
 ## Quick Start
 
-### 1. Prerequisites
+### 1. Install
 
-- Python **3.10+**
-- Windows, macOS, or Linux
+Choose one of the installation methods above.
 
-### 2. Clone & Setup
-
-```shell
-git clone https://github.com/CarmJos/azure-ai-proxy
-cd azure-ai-proxy
-```
-
-Then run the init script to create .venv and install dependencies,
-
-for Windows:
-```shell
-.\init.ps1
-```
-
-for macOS / Linux:
-```shell
-chmod +x init.sh
-./init.sh
-```
-
-> [!CAUTION]  
-> If the init script fails, please open it with a text editor and
-> inspect the commands. The script is straightforward — each step is a single shell
-> command you can also run manually.
-
-### 3. Configure Models
+### 2. Configure Models
 
 Edit `config.yaml` to define your backend models:
 
@@ -142,7 +116,7 @@ models:
 
 See [`config.example.yaml`](config.example.yaml) for a full annotated example with multiple providers.
 
-### 4. Run
+### 3. Run
 
 **Windows:**
 
@@ -159,7 +133,7 @@ chmod +x run.sh
 
 The proxy starts at `http://localhost:4000`.
 
-### 5. Use with JetBrains IDE
+### 4. Use with JetBrains IDE
 
 > [!NOTE]
 > The following steps show how to connect this proxy to **JetBrains GitHub Copilot**.

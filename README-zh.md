@@ -77,35 +77,11 @@ docker run -p 4000:4000 -v /path/to/config.yaml:/app/config.yaml ghcr.io/carmjos
 
 ## 快速开始
 
-### 1. 先决条件
+### 1. 安装
 
-- Python **3.10+**
-- Windows、macOS 或 Linux
+选择上面的一种安装方式。
 
-### 2. 克隆与设置
-
-```shell
-git clone https://github.com/CarmJos/azure-ai-proxy
-cd azure-ai-proxy
-```
-
-然后运行初始化脚本创建 .venv 并安装依赖，
-
-Windows 系统：
-```shell
-.\init.ps1
-```
-
-macOS / Linux 系统：
-```shell
-chmod +x init.sh
-./init.sh
-```
-
-> [!CAUTION]  
-> 如果初始化脚本失败，请使用文本编辑器打开它并检查命令。该脚本很简单 — 每个步骤都是单个 shell 命令，您也可以手动运行。
-
-### 3. 配置模型
+### 2. 配置模型
 
 编辑 `config.yaml` 定义您的后端模型：
 
@@ -137,7 +113,7 @@ models:
 
 完整的带注释示例及多提供商配置请参见 [`config.example.yaml`](config.example.yaml)。
 
-### 4. 运行
+### 3. 运行
 
 **Windows 系统：**
 
@@ -154,7 +130,7 @@ chmod +x run.sh
 
 代理将在 `http://localhost:4000` 启动。
 
-### 5. 与 JetBrains IDE 配合使用
+### 4. 与 JetBrains IDE 配合使用
 
 > [!NOTE]
 > 以下步骤展示如何将此代理连接到 **JetBrains GitHub Copilot**。
