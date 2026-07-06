@@ -46,13 +46,13 @@ azure-ai-proxy --config config.yaml
 ### 方式二：一键安装脚本
 
 **Windows 系统：**
-```shell
-irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.ps1 | iex
+```powershell
+Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.ps1" -OutFile "./install.ps1"; &"./install.ps1"
 ```
 
 **macOS / Linux 系统：**
 ```shell
-curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.sh | bash
+curl -fsSL "https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.sh" -o install.sh && bash install.sh
 ```
 
 > [!TIP]
@@ -60,12 +60,12 @@ curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/m
 >
 > **Windows (PowerShell):**
 > ```powershell
-> $env:INSTALL_DIR = "C:\Tools\azure-ai-proxy"; irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.ps1 | iex
+> $env:INSTALL_DIR = "C:\Tools\azure-ai-proxy"; Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.ps1" -OutFile "./install.ps1"; &"./install.ps1"
 > ```
 >
 > **macOS / Linux:**
 > ```shell
-> curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.sh | INSTALL_DIR=/opt/azure-ai-proxy bash
+> curl -fsSL "https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.sh" -o install.sh && INSTALL_DIR=/opt/azure-ai-proxy bash install.sh
 > ```
 
 ### 方式三：Docker
