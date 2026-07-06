@@ -10,9 +10,18 @@
 
 param(
     [switch]$Help,
-    [string]$InstallDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { "$env:USERPROFILE\.azure-ai-proxy" },
+    [string]$InstallDir,
     [switch]$AddToPath
 )
+
+# Resolve install directory from parameter or environment variable
+if (-not $InstallDir) {
+    if ($env:INSTALL_DIR) {
+        $InstallDir = $env:INSTALL_DIR
+    } else {
+        $InstallDir = "$env:USERPROFILE\.azure-ai-proxy"
+    }
+}
 
 if ($Help) {
     Write-Host @"

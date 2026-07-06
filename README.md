@@ -49,13 +49,13 @@ azure-ai-proxy --config config.yaml
 ### Option 2: One-liner Install Scripts
 
 **Windows (PowerShell):**
-```shell
-irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.ps1 | iex
+```powershell
+irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.ps1 | iex
 ```
 
 **macOS / Linux:**
 ```shell
-curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.sh | bash
 ```
 
 > [!TIP]
@@ -63,12 +63,12 @@ curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/m
 >
 > **Windows (PowerShell):**
 > ```powershell
-> $env:INSTALL_DIR = "C:\Tools\azure-ai-proxy"; irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.ps1 | iex
+> $env:INSTALL_DIR = "C:\Tools\azure-ai-proxy"; irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.ps1 | iex
 > ```
 >
 > **macOS / Linux:**
 > ```shell
-> curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | INSTALL_DIR=/opt/azure-ai-proxy bash
+> curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.sh | INSTALL_DIR=/opt/azure-ai-proxy bash
 > ```
 
 ### Option 3: Docker

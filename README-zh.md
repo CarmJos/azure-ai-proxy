@@ -47,12 +47,12 @@ azure-ai-proxy --config config.yaml
 
 **Windows 系统：**
 ```shell
-irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.ps1 | iex
 ```
 
 **macOS / Linux 系统：**
 ```shell
-curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.sh | bash
 ```
 
 > [!TIP]
@@ -60,12 +60,12 @@ curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/m
 >
 > **Windows (PowerShell):**
 > ```powershell
-> $env:INSTALL_DIR = "C:\Tools\azure-ai-proxy"; irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.ps1 | iex
+> $env:INSTALL_DIR = "C:\Tools\azure-ai-proxy"; irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.ps1 | iex
 > ```
 >
 > **macOS / Linux:**
 > ```shell
-> curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | INSTALL_DIR=/opt/azure-ai-proxy bash
+> curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/master/install.sh | INSTALL_DIR=/opt/azure-ai-proxy bash
 > ```
 
 ### 方式三：Docker

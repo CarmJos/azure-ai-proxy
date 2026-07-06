@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "azure-ai-proxy"
-version = "1.0.2"
+version = "1.0.4"
 description = "A lightweight proxy that bridges Azure OpenAI API format to any LiteLLM-supported backend."
 readme = "README.md"
 license = {text = "GPL-3.0"}
@@ -43,7 +43,7 @@ azure-ai-proxy = "proxy.server:main"
 
 [project.urls]
 Homepage = "https://github.com/CarmJos/azure-ai-proxy"
-Documentation = "https://github.com/CarmJos/azure-ai-proxy/blob/main/README.md"
+Documentation = "https://github.com/CarmJos/azure-ai-proxy/blob/master/README.md"
 Repository = "https://github.com/CarmJos/azure-ai-proxy.git"
 Issues = "https://github.com/CarmJos/azure-ai-proxy/issues"
 
@@ -53,4 +53,3 @@ exclude = ["proxy.__pycache__*"]
 
 [tool.setuptools.package-data]
 proxy = ["*.py"]
-
