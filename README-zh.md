@@ -30,6 +30,17 @@ _**"一个轻量级代理，将 Azure OpenAI API 格式桥接到任何 LiteLLM �
 - **调试模式** — 切换 `general.debug` 记录完整的请求正文以便故障排除。
 - **访问控制** — 设置 `general.api-key` 要求所有代理请求都需要 API 密钥。
 
+## 下载预构建包
+
+如果您不想安装 Python 和依赖项，可以直接从 [Releases](https://github.com/CarmJos/azure-ai-proxy/releases) 页面下载预构建的可执行文件。
+
+| 平台 | 包名 | 使用方法 |
+|------|------|----------|
+| **Windows** | `azure-ai-proxy-windows.zip` | 解压后双击 `azure-ai-proxy.exe` |
+| **Linux** | `azure-ai-proxy-linux.tar.gz` | 解压后运行 `./azure-ai-proxy` |
+
+每个包都包含可执行文件和示例配置文件 `config.example.yaml`。运行前请将其编辑为 `config.yaml` 并配置您的模型。
+
 ## 快速开始
 
 ### 1. 先决条件
@@ -48,7 +59,7 @@ cd azure-ai-proxy
 
 Windows 系统：
 ```shell
-init.bat
+.\init.ps1
 ```
 
 macOS / Linux 系统：
@@ -97,7 +108,7 @@ models:
 **Windows 系统：**
 
 ```shell
-run.bat
+.\run.ps1
 ```
 
 **macOS / Linux 系统：**

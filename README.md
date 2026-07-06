@@ -33,6 +33,17 @@ Compatible with tools and IDEs that support the Azure OpenAI API format, includi
 - **Access Control** — Set `general.api-key` to require an API key on all proxy requests.
 - **Zero Dependencies Beyond pip** — Only `aiohttp`, `litellm`, and `pyyaml`.
 
+## Download Pre-built Packages
+
+If you don't want to install Python and dependencies, you can download pre-built executables from the [Releases](https://github.com/CarmJos/azure-ai-proxy/releases) page.
+
+| Platform | Package | Usage |
+|----------|---------|-------|
+| **Windows** | `azure-ai-proxy-windows.zip` | Extract and double-click `azure-ai-proxy.exe` |
+| **Linux** | `azure-ai-proxy-linux.tar.gz` | Extract and run `./azure-ai-proxy` |
+
+Each package includes the executable and a sample `config.example.yaml` file. Edit it to `config.yaml` and configure your models before running.
+
 ## Quick Start
 
 ### 1. Prerequisites
@@ -51,7 +62,7 @@ Then run the init script to create .venv and install dependencies,
 
 for Windows:
 ```shell
-init.bat
+.\init.ps1
 ```
 
 for macOS / Linux:
@@ -102,7 +113,7 @@ See [`config.example.yaml`](config.example.yaml) for a full annotated example wi
 **Windows:**
 
 ```shell
-run.bat
+.\run.ps1
 ```
 
 **macOS / Linux:**

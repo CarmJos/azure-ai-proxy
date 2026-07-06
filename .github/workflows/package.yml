@@ -1,0 +1,87 @@
+name: Package & Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: azure-ai-proxy-linux
+            executable_name: azure-ai-proxy
+          - os: windows-latest
+            artifact_name: azure-ai-proxy-windows
+            executable_name: azure-ai-proxy.exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable with PyInstaller
+        run: |
+          pyinstaller `
+            --name ${{ matrix.executable_name }} `
+            --onefile `
+            --console `
+            --add-data "config.example.yaml;." `
+            --hidden-import=aiohttp `
+            --hidden-import=litellm `
+            --hidden-import=yaml `
+            --hidden-import=proxy.server `
+            --hidden-import=proxy.bridge `
+            --hidden-import=proxy.config `
+            --hidden-import=proxy.logging_setup `
+            --hidden-import=proxy.middleware `
+            --hidden-import=proxy.models `
+            --hidden-import=proxy.routes `
+            --hidden-import=proxy.azure_format `
+            --hidden-import=proxy.utils `
+            --hidden-import=proxy.handlers `
+            --hidden-import=proxy.handlers.chat `
+            --hidden-import=proxy.handlers.completions `
+            --hidden-import=proxy.handlers.deployments `
+            --hidden-import=proxy.handlers.embeddings `
+            --hidden-import=proxy.handlers.health `
+            --hidden-import=proxy.handlers.models `
+            proxy/__main__.py
+        shell: bash
+
+      - name: Prepare release archive (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd dist
+          cp ../config.example.yaml .
+          tar -czf ../${{ matrix.artifact_name }}.tar.gz ${{ matrix.executable_name }} config.example.yaml
+          cd ..
+
+      - name: Prepare release archive (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd dist
+          Copy-Item ../config.example.yaml .
+          Compress-Archive -Path ${{ matrix.executable_name }}, config.example.yaml -DestinationPath ../${{ matrix.artifact_name }}.zip
+          cd ..
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact_name }}.${{ matrix.os == 'ubuntu-latest' && 'tar.gz' || 'zip' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
