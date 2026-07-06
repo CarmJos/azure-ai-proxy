@@ -33,16 +33,37 @@ Compatible with tools and IDEs that support the Azure OpenAI API format, includi
 - **Access Control** — Set `general.api-key` to require an API key on all proxy requests.
 - **Zero Dependencies Beyond pip** — Only `aiohttp`, `litellm`, and `pyyaml`.
 
-## Download Pre-built Packages
+## Installation
 
-If you don't want to install Python and dependencies, you can download pre-built executables from the [Releases](https://github.com/CarmJos/azure-ai-proxy/releases) page.
+### Option 1: pip (Recommended)
 
-| Platform | Package | Usage |
-|----------|---------|-------|
-| **Windows** | `azure-ai-proxy-windows.zip` | Extract and double-click `azure-ai-proxy.exe` |
-| **Linux** | `azure-ai-proxy-linux.tar.gz` | Extract and run `./azure-ai-proxy` |
+```shell
+pip install git+https://github.com/CarmJos/azure-ai-proxy.git
+```
 
-Each package includes the executable and a sample `config.example.yaml` file. Edit it to `config.yaml` and configure your models before running.
+Then run:
+```shell
+azure-ai-proxy --config config.yaml
+```
+
+### Option 2: One-liner Install Scripts
+
+**Windows (PowerShell):**
+```shell
+irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.ps1 | iex
+```
+
+**macOS / Linux:**
+```shell
+curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | bash
+```
+
+### Option 3: Docker
+
+```shell
+docker pull ghcr.io/carmjos/azure-ai-proxy:latest
+docker run -p 4000:4000 -v /path/to/config.yaml:/app/config.yaml ghcr.io/carmjos/azure-ai-proxy:latest
+```
 
 ## Quick Start
 

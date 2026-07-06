@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "azure-ai-proxy"
+version = "1.0.2"
+description = "A lightweight proxy that bridges Azure OpenAI API format to any LiteLLM-supported backend."
+readme = "README.md"
+license = {text = "GPL-3.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "CarmJos", email = "carm@carm.cc"},
+]
+keywords = ["azure", "openai", "proxy", "litellm", "ai", "api"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+
+dependencies = [
+    "aiohttp>=3.9",
+    "litellm>=1.90.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[project.scripts]
+azure-ai-proxy = "proxy.server:main"
+
+[project.urls]
+Homepage = "https://github.com/CarmJos/azure-ai-proxy"
+Documentation = "https://github.com/CarmJos/azure-ai-proxy/blob/main/README.md"
+Repository = "https://github.com/CarmJos/azure-ai-proxy.git"
+Issues = "https://github.com/CarmJos/azure-ai-proxy/issues"
+
+[tool.setuptools.packages.find]
+include = ["proxy*"]
+exclude = ["proxy.__pycache__*"]
+
+[tool.setuptools.package-data]
+proxy = ["*.py"]
+

@@ -30,16 +30,37 @@ _**"一个轻量级代理，将 Azure OpenAI API 格式桥接到任何 LiteLLM �
 - **调试模式** — 切换 `general.debug` 记录完整的请求正文以便故障排除。
 - **访问控制** — 设置 `general.api-key` 要求所有代理请求都需要 API 密钥。
 
-## 下载预构建包
+## 安装
 
-如果您不想安装 Python 和依赖项，可以直接从 [Releases](https://github.com/CarmJos/azure-ai-proxy/releases) 页面下载预构建的可执行文件。
+### 方式一：pip 安装（推荐）
 
-| 平台 | 包名 | 使用方法 |
-|------|------|----------|
-| **Windows** | `azure-ai-proxy-windows.zip` | 解压后双击 `azure-ai-proxy.exe` |
-| **Linux** | `azure-ai-proxy-linux.tar.gz` | 解压后运行 `./azure-ai-proxy` |
+```shell
+pip install git+https://github.com/CarmJos/azure-ai-proxy.git
+```
 
-每个包都包含可执行文件和示例配置文件 `config.example.yaml`。运行前请将其编辑为 `config.yaml` 并配置您的模型。
+安装后直接运行：
+```shell
+azure-ai-proxy --config config.yaml
+```
+
+### 方式二：一键安装脚本
+
+**Windows 系统：**
+```shell
+irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.ps1 | iex
+```
+
+**macOS / Linux 系统：**
+```shell
+curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | bash
+```
+
+### 方式三：Docker
+
+```shell
+docker pull ghcr.io/carmjos/azure-ai-proxy:latest
+docker run -p 4000:4000 -v /path/to/config.yaml:/app/config.yaml ghcr.io/carmjos/azure-ai-proxy:latest
+```
 
 ## 快速开始
 
