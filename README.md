@@ -58,6 +58,19 @@ irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/ins
 curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | bash
 ```
 
+> [!TIP]
+> The default installation directory is `~/.azure-ai-proxy`. To specify a different directory, use:
+>
+> **Windows (PowerShell):**
+> ```powershell
+> $env:INSTALL_DIR = "C:\Tools\azure-ai-proxy"; irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.ps1 | iex
+> ```
+>
+> **macOS / Linux:**
+> ```shell
+> curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | INSTALL_DIR=/opt/azure-ai-proxy bash
+> ```
+
 ### Option 3: Docker
 
 ```shell

@@ -19,7 +19,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Defaults
-INSTALL_DIR="$HOME/.azure-ai-proxy"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.azure-ai-proxy}"
 ADD_TO_PATH=false
 
 # Parse arguments
@@ -125,8 +125,8 @@ fi
 echo -e "  Upgrading pip..."
 "$PIP_PATH" install --upgrade pip &>/dev/null
 
-echo -e "  Installing azure-ai-proxy from PyPI..."
-"$PIP_PATH" install azure-ai-proxy
+echo -e "  Installing azure-ai-proxy from GitHub..."
+"$PIP_PATH" install git+https://github.com/CarmJos/azure-ai-proxy.git
 if [[ $? -ne 0 ]]; then
     echo -e "  ${RED}ERROR: Failed to install azure-ai-proxy.${NC}"
     exit 1
@@ -229,4 +229,3 @@ echo -e "  ${YELLOW}Or activate the venv and run directly:${NC}"
 echo -e "    source $SCRIPTS_DIR/activate"
 echo -e "    python -m proxy.server --config $CONFIG_PATH"
 echo ""
-

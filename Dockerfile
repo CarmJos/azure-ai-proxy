@@ -9,9 +9,10 @@ FROM python:3.10-slim AS builder
 
 WORKDIR /build
 
-# Only copy requirements first for better layer caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+# Copy pyproject.toml and source code for dependency installation
+COPY pyproject.toml .
+COPY proxy/ ./proxy/
+RUN pip install --no-cache-dir --user -e .
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
 FROM python:3.10-slim

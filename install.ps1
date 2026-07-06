@@ -10,7 +10,7 @@
 
 param(
     [switch]$Help,
-    [string]$InstallDir = "$env:USERPROFILE\.azure-ai-proxy",
+    [string]$InstallDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { "$env:USERPROFILE\.azure-ai-proxy" },
     [switch]$AddToPath
 )
 
@@ -107,8 +107,8 @@ if (-not (Test-Path $pipPath)) {
 Write-Host "  Upgrading pip..."
 & $pipPath install --upgrade pip | Out-Null
 
-Write-Host "  Installing azure-ai-proxy from PyPI..."
-& $pipPath install azure-ai-proxy
+Write-Host "  Installing azure-ai-proxy from GitHub..."
+& $pipPath install git+https://github.com/CarmJos/azure-ai-proxy.git
 if ($LASTEXITCODE -ne 0) {
     Write-Host "  ERROR: Failed to install azure-ai-proxy." -ForegroundColor Red
     exit 1

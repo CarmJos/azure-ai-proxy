@@ -55,6 +55,19 @@ irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/ins
 curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | bash
 ```
 
+> [!TIP]
+> 默认安装目录为 `~/.azure-ai-proxy`。如需指定其他目录，可以使用以下命令：
+>
+> **Windows (PowerShell):**
+> ```powershell
+> $env:INSTALL_DIR = "C:\Tools\azure-ai-proxy"; irm https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.ps1 | iex
+> ```
+>
+> **macOS / Linux:**
+> ```shell
+> curl -fsSL https://raw.githubusercontent.com/CarmJos/azure-ai-proxy/refs/heads/main/install.sh | INSTALL_DIR=/opt/azure-ai-proxy bash
+> ```
+
 ### 方式三：Docker
 
 ```shell
